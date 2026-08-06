@@ -1,14 +1,17 @@
 package com.ahmed.imagereveal
 
+import android.content.ContentValues
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import java.io.OutputStream
 
 class ImageRevealActivity : AppCompatActivity() {
 
@@ -29,6 +32,7 @@ class ImageRevealActivity : AppCompatActivity() {
         val btnPick = findViewById<Button>(R.id.btnPickImage)
         val btnToggle = findViewById<Button>(R.id.btnToggleMode)
         val btnReset = findViewById<Button>(R.id.btnReset)
+        val btnSave = findViewById<Button>(R.id.btnSave)
 
         btnPick.setOnClickListener { pickImageLauncher.launch("image/*") }
 
@@ -44,6 +48,8 @@ class ImageRevealActivity : AppCompatActivity() {
         }
 
         btnReset.setOnClickListener { maskView.resetReveal() }
+
+        btnSave.setOnClickListener { saveImage() }
     }
 
     private fun loadBitmap(uri: Uri) {
@@ -55,5 +61,35 @@ class ImageRevealActivity : AppCompatActivity() {
             android.provider.MediaStore.Images.Media.getBitmap(contentResolver, uri)
         }
         maskView.setImage(bmp)
+    }
+
+    private fun saveImage() {
+        val bmp = maskView.exportCurrentState()
+        if (bmp == null) {
+            Toast.makeText(this, "اختر صورة أولاً", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val filename = "ImageReveal_${System.currentTimeMillis()}.png"
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, filename)
+            put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/ImageReveal")
+            }
+        }
+
+        val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+        if (uri == null) {
+            Toast.makeText(this, "فشل الحفظ", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val out: OutputStream? = contentResolver.openOutputStream(uri)
+        out?.use {
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+
+        Toast.makeText(this, "تم حفظ الصورة بالمعرض", Toast.LENGTH_SHORT).show()
     }
 }
