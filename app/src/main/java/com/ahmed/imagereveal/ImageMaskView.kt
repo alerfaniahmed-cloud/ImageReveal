@@ -58,6 +58,26 @@ class ImageMaskView @JvmOverloads constructor(
         invalidate()
     }
 
+    fun exportCurrentState(): Bitmap? {
+        val bmp = bitmap ?: return null
+        val result = Bitmap.createBitmap(bmp.width, bmp.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(result)
+        canvas.drawBitmap(bmp, 0f, 0f, bitmapPaint)
+
+        for (i in regions.indices) {
+            val alpha = alphaMap[i] ?: 1f
+            if (alpha <= 0.01f) continue
+            val r = regions[i]
+            val rect = RectF(
+                r.left * bmp.width, r.top * bmp.height,
+                r.right * bmp.width, r.bottom * bmp.height
+            )
+            blackPaint.alpha = (alpha * 255).toInt()
+            canvas.drawRect(rect, blackPaint)
+        }
+        return result
+    }
+
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         updateMatrix()
