@@ -42,11 +42,42 @@
             android:text="حفظ" />
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/opacityRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toBottomOf="@id/buttonsRow">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="مستوى التعتيم:" />
+
+        <SeekBar
+            android:id="@+id/seekOpacity"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="100"
+            android:progress="100" />
+
+        <TextView
+            android:id="@+id/txtOpacityValue"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:text="100%"
+            android:gravity="center" />
+    </LinearLayout>
+
     <com.ahmed.imagereveal.ImageMaskView
         android:id="@+id/maskView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/buttonsRow"
+        app:layout_constraintTop_toBottomOf="@id/opacityRow"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
