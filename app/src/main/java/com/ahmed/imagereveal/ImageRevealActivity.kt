@@ -10,6 +10,8 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Button
+import android.widget.SeekBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -46,6 +48,8 @@ class ImageRevealActivity : AppCompatActivity() {
         val btnToggle = findViewById<Button>(R.id.btnToggleMode)
         val btnReset = findViewById<Button>(R.id.btnReset)
         val btnSave = findViewById<Button>(R.id.btnSave)
+        val seekOpacity = findViewById<SeekBar>(R.id.seekOpacity)
+        val txtOpacityValue = findViewById<TextView>(R.id.txtOpacityValue)
 
         btnPick.setOnClickListener { pickImageLauncher.launch("image/*") }
 
@@ -63,6 +67,17 @@ class ImageRevealActivity : AppCompatActivity() {
         btnReset.setOnClickListener { maskView.resetReveal() }
 
         btnSave.setOnClickListener { requestSave() }
+
+        seekOpacity.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                txtOpacityValue.text = "$progress%"
+                maskView.defaultOpacity = progress / 100f
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        maskView.defaultOpacity = seekOpacity.progress / 100f
     }
 
     private fun loadBitmap(uri: Uri) {
