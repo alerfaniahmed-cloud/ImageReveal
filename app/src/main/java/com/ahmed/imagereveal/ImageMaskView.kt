@@ -21,12 +21,16 @@ class ImageMaskView @JvmOverloads constructor(
 
     var mode: Mode = Mode.REVEAL
 
+    // مستوى التعتيم الافتراضي للمربعات الجديدة (0f = شفاف تماماً، 1f = أسود كامل)
+    var defaultOpacity: Float = 1f
+
     private var bitmap: Bitmap? = null
     private val drawMatrix = Matrix()
     private val inverseMatrix = Matrix()
 
     private val regions = mutableListOf<RectF>()
     private val alphaMap = HashMap<Int, Float>()
+    private val baseOpacityMap = HashMap<Int, Float>()
 
     private var startPoint: FloatArray? = null
     private var currentRect: RectF? = null
@@ -43,6 +47,7 @@ class ImageMaskView @JvmOverloads constructor(
         bitmap = bmp
         regions.clear()
         alphaMap.clear()
+        baseOpacityMap.clear()
         updateMatrix()
         invalidate()
     }
@@ -50,11 +55,14 @@ class ImageMaskView @JvmOverloads constructor(
     fun clearRegions() {
         regions.clear()
         alphaMap.clear()
+        baseOpacityMap.clear()
         invalidate()
     }
 
     fun resetReveal() {
-        for (i in regions.indices) alphaMap[i] = 1f
+        for (i in regions.indices) {
+            alphaMap[i] = baseOpacityMap[i] ?: 1f
+        }
         invalidate()
     }
 
@@ -157,7 +165,9 @@ class ImageMaskView @JvmOverloads constructor(
                                     (p2[1] / bmp.height).coerceIn(0f, 1f)
                                 )
                                 regions.add(norm)
-                                alphaMap[regions.size - 1] = 1f
+                                val idx = regions.size - 1
+                                baseOpacityMap[idx] = defaultOpacity
+                                alphaMap[idx] = defaultOpacity
                             }
                         }
                         currentRect = null
@@ -172,7 +182,7 @@ class ImageMaskView @JvmOverloads constructor(
                     val ny = p[1] / bmp.height
                     for (i in regions.indices.reversed()) {
                         val r = regions[i]
-                        if (nx in r.left..r.right && ny in r.top..r.bottom && (alphaMap[i] ?: 1f) > 0.5f) {
+                        if (nx in r.left..r.right && ny in r.top..r.bottom && (alphaMap[i] ?: 1f) > 0.05f) {
                             animateReveal(i)
                             break
                         }
@@ -184,7 +194,8 @@ class ImageMaskView @JvmOverloads constructor(
     }
 
     private fun animateReveal(index: Int) {
-        val animator = ValueAnimator.ofFloat(1f, 0f)
+        val startAlpha = alphaMap[index] ?: 1f
+        val animator = ValueAnimator.ofFloat(startAlpha, 0f)
         animator.duration = 300
         animator.addUpdateListener {
             alphaMap[index] = it.animatedValue as Float
